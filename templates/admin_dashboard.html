@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Admin Dashboard</h1>
+    <a href="{{ url_for('add_question') }}" class="btn btn-primary">Add Question</a>
+    <h2 class="mt-4">Questions</h2>
+    <ul class="list-group">
+        {% for question in questions %}
+            <li class="list-group-item">
+                {{ question.question }}
+                <a href="{{ url_for('view_question', question_id=question.id) }}" class="btn btn-info float-right">View</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}

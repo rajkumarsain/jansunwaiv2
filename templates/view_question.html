@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Question Details</h1>
+
+    <!-- Display the selected question -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h4 class="card-title">{{ question.question }}</h4>
+            {% if question.file %}
+                <p><strong>Attached File:</strong> <a href="{{ url_for('static', filename='uploads/' + question.file) }}" target="_blank">{{ question.file }}</a></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Display previous replies -->
+    <h2>Replies:</h2>
+    <ul class="list-group mb-4">
+        {% if replies %}
+            {% for reply in replies %}
+                <li class="list-group-item">
+                    <p><strong>User {{ reply.user_id }} replied:</strong></p>
+                    <p>{{ reply.reply }}</p>
+                    {% if reply.file %}
+                        <p><strong>Attached File:</strong> <a href="{{ url_for('static', filename='uploads/' + reply.file) }}" target="_blank">{{ reply.file }}</a></p>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        {% else %}
+            <li class="list-group-item">No replies yet.</li>
+        {% endif %}
+    </ul>
+
+    <!-- Form to add a new reply -->
+    <h2 class="mt-4">Add Your Reply:</h2>
+    <form method="POST" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="reply">Your Reply</label>
+            <textarea class="form-control" id="reply" name="reply" rows="3" required></textarea>
+        </div>
+        <div class="form-group">
+            <label for="file">Attach a File (Optional)</label>
+            <input type="file" class="form-control" id="file" name="file">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Reply</button>
+    </form>
+
+{% endblock %}
