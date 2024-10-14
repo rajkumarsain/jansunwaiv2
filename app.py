@@ -2,17 +2,21 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, logout_user, login_required, UserMixin, current_user
 from werkzeug.utils import secure_filename
+from flask_migrate import Migrate
 import os
 
 app = Flask(__name__)
+
+# Update the database URI to use MySQL
 app.config['SECRET_KEY'] = 'your_secret_key'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://jansunwai_user:Doit1234@localhost/jansunwai'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+migrate = Migrate(app, db)
 
 # Ensure the uploads directory exists
 if not os.path.exists('uploads'):
@@ -149,6 +153,6 @@ def view_question(question_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        db.create_all()#creates the tables if they dont exist
         create_default_users()  # Populate the database with default admin and client users
     app.run(debug=True)
