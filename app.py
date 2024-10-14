@@ -23,7 +23,6 @@ if not os.path.exists('uploads'):
     os.makedirs('uploads')
 
 # Create User model
-# User model with SQLAlchemy
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
@@ -35,6 +34,7 @@ class Question(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     question = db.Column(db.String(500), nullable=False)
     file = db.Column(db.String(200))  # Optional file attachment
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)  # Link to Department
 
 # Reply model
 class Reply(db.Model):
@@ -43,6 +43,12 @@ class Reply(db.Model):
     file = db.Column(db.String(200))  # Optional file attachment
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+#department model
+class Department(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    questions = db.relationship('Question', backref='department', lazy=True)
+
 
 def create_default_users():
     # Check if users already exist
@@ -55,6 +61,15 @@ def create_default_users():
         db.session.add(client_user)
 
     db.session.commit()
+
+def create_default_departments():
+    if not Department.query.first():
+        departments = ['DOITC', 'JVVNL', 'DFO', 'PHED']  # Add your department names
+        for name in departments:
+            new_department = Department(name=name)
+            db.session.add(new_department)
+        db.session.commit()
+
 
 # Function to load user based on user_id
 @login_manager.user_loader
@@ -112,18 +127,24 @@ def add_question():
     if not current_user.is_admin:
         return redirect(url_for('user_dashboard'))
     
+    departments = Department.query.all()  # Fetch all departments
+    
     if request.method == 'POST':
         question_text = request.form['question']
+        department_id = request.form['department']  # Get selected department
         file = request.files.get('file')
         filename = secure_filename(file.filename) if file else None
+        
         if filename:
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        new_question = Question(question=question_text, file=filename)
+        
+        new_question = Question(question=question_text, file=filename, department_id=department_id)
         db.session.add(new_question)
         db.session.commit()
+        
         return redirect(url_for('admin_dashboard'))
     
-    return render_template('add_question.html')
+    return render_template('add_question.html', departments=departments)
 
 # User routes
 @app.route('/user/dashboard')
@@ -153,6 +174,7 @@ def view_question(question_id):
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()#creates the tables if they dont exist
+        db.create_all()  # Creates the tables if they don't exist
         create_default_users()  # Populate the database with default admin and client users
+        create_default_departments()  # Populate the database with default departments
     app.run(debug=True)

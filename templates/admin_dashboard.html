@@ -2,6 +2,15 @@
 {% block content %}
     <h1>Admin Dashboard</h1>
     <a href="{{ url_for('add_question') }}" class="btn btn-primary">Add Question</a>
+    {% for question in questions %}
+        <li class="list-group-item">
+            <h4>{{ question.question }}</h4>
+            <p><strong>Department:</strong> {{ question.department.name }}</p>
+            {% if question.file %}
+                <p><strong>Attached File:</strong> <a href="{{ url_for('static', filename='uploads/' + question.file) }}" target="_blank">{{ question.file }}</a></p>
+            {% endif %}
+        </li>
+    {% endfor %}
     <h2 class="mt-4">Questions</h2>
     <ul class="list-group">
         {% for question in questions %}
