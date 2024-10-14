@@ -1,23 +1,27 @@
 {% extends "base.html" %}
 {% block content %}
     <h1>Admin Dashboard</h1>
-    <a href="{{ url_for('add_question') }}" class="btn btn-primary">Add Question</a>
-    {% for question in questions %}
-        <li class="list-group-item">
-            <h4>{{ question.question }}</h4>
-            <p><strong>Department:</strong> {{ question.department.name }}</p>
-            {% if question.file %}
-                <p><strong>Attached File:</strong> <a href="{{ url_for('static', filename='uploads/' + question.file) }}" target="_blank">{{ question.file }}</a></p>
-            {% endif %}
-        </li>
-    {% endfor %}
-    <h2 class="mt-4">Questions</h2>
-    <ul class="list-group">
-        {% for question in questions %}
-            <li class="list-group-item">
-                {{ question.question }}
-                <a href="{{ url_for('view_question', question_id=question.id) }}" class="btn btn-info float-right">View</a>
-            </li>
-        {% endfor %}
-    </ul>
+
+    <!-- Table for Departments and Questions Summary -->
+    <h2>Department Overview</h2>
+    <table class="table table-bordered table-striped text-center">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Department Name</th>
+                <th>Total Assigned Questions</th>
+                <th>Total Pending Questions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for department, question_count, pending_count in departments_summary %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ department.name }}</td>
+                    <td>{{ question_count }}</td>
+                    <td>{{ pending_count }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

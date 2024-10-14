@@ -1,0 +1,26 @@
+<!-- view_user.html -->
+{% extends "base.html" %}
+{% block content %}
+    <h1>User List</h1>
+    
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Department</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.id }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.department.name if user.department else 'No Department' }}</td>
+                <td>{{ 'Admin' if user.is_admin else 'User' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

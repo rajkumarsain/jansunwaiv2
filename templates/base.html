@@ -3,27 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Question & Answer System</title>
+    <title>{% block title %}My Application{% endblock %}</title>
+
+    <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">ALWAR DM'S DAILY JANSUNWAYI SYSTEM</a>
+        <a class="navbar-brand" href="{{ url_for('index') }}">My Application</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
+                
                 {% if current_user.is_authenticated %}
-                    {% if current_user.is_admin %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('user_dashboard') }}">User Dashboard</a>
-                        </li>
-                    {% endif %}
+    <li class="nav-item">
+        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+    </li>
+
+                {% if current_user.is_admin %}
+                    <!-- Questions Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="questionsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Questions
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="questionsDropdown">
+                            <a class="dropdown-item" href="{{ url_for('add_question') }}">Add Question</a>
+                            <a class="dropdown-item" href="{{ url_for('view_questions_by_department') }}">View Questions</a>
+                        </div>
+                    </li>
+
+                    <!-- Users Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="usersDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Users
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="usersDropdown">
+                            <a class="dropdown-item" href="{{ url_for('add_user') }}">Add User</a>
+                            <a class="dropdown-item" href="{{ url_for('view_users') }}">View Users</a>
+                        </div>
+                    </li>
+
+                    <!-- Departments Dropdown -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="departmentsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Departments
+                        </a>
+                        <div class="dropdown-menu" aria-labelledby="departmentsDropdown">
+                            <a class="dropdown-item" href="{{ url_for('add_department') }}">Add Department</a>
+                            <a class="dropdown-item" href="{{ url_for('view_departments') }}">View Departments</a>
+                        </div>
+                    </li>
+                {% endif %}
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                     </li>
@@ -36,11 +71,35 @@
         </div>
     </nav>
 
-    <div class="container mt-5">
-        {% block content %}{% endblock %}
+    <!-- Main content -->
+    <div class="container mt-4">
+        {% block content %}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="container mt-4">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+         
+
+        {% endblock %}
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Footer -->
+    <footer class="bg-light text-center text-lg-start mt-5">
+        <div class="container p-4">
+            <p class="text-muted">© 2024 My Application</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS, Popper.js, and jQuery -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
