@@ -48,6 +48,7 @@ class Question(db.Model):
     question = db.Column(db.String(500), nullable=False)
     file = db.Column(db.String(200))  # Optional file attachment
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)  # Link to Department
+    replies = db.relationship('Reply', backref='question', lazy=True)  # Add relationship to replies
 
 # Reply model
 class Reply(db.Model):
@@ -71,7 +72,6 @@ def create_default_departments():
             new_department = Department(name=name)
             db.session.add(new_department)
         db.session.commit()
-
 
 # Function to load user based on user_id
 @login_manager.user_loader
@@ -158,7 +158,7 @@ def admin_dashboard():
 @login_required
 def add_question():
     if not current_user.is_admin:
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('view_questions_by_department'))
     
     departments = Department.query.all()  # Fetch all departments
     
@@ -276,6 +276,27 @@ def view_departments():
     
     departments = Department.query.all()  # Fetch all departments
     return render_template('view_departments.html', departments=departments)
+
+#To handle replies for each question:
+@app.route('/add_reply/<int:question_id>', methods=['POST'])
+@login_required
+def add_reply(question_id):
+    question = Question.query.get_or_404(question_id)
+    
+    reply_text = request.form['reply']
+    file = request.files.get('file')
+    filename = None
+
+    if file:
+        filename = secure_filename(file.filename)
+        file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    
+    # Add the new reply
+    new_reply = Reply(reply=reply_text, file=filename, question_id=question_id, user_id=current_user.id)
+    db.session.add(new_reply)
+    db.session.commit()
+    
+    return redirect(url_for('user_dashboard'))
 
 #main
 if __name__ == '__main__':
