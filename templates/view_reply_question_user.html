@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Assigned Questions</h1>
+
+    <!-- Display the list of questions -->
+    <table class="table table-bordered table-striped text-center">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Question</th>
+                <th>Previous Replies</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if questions %}
+                {% for question in questions %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ question.question }}</td>
+                        <td>
+                            {% if question.replies %}
+                                <ul>
+                                    {% for reply in question.replies %}
+                                        <li>{{ reply.reply }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                No replies yet.
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('reply_to_question', question_id=question.id) }}" class="btn btn-primary">Reply</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="4">No questions assigned to your department yet.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Department Dashboard</h1>
+
+    <table class="table table-bordered table-striped text-center">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Total Assigned Questions</th>
+                <th>Total Pending Questions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td> <!-- Just one row for this department -->
+                <td>{{ total_assigned }}</td>
+                <td>{{ total_pending }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+{% endblock %}

@@ -85,18 +85,31 @@ def index():
         if current_user.is_admin:
             return redirect(url_for('admin_dashboard'))  # Redirect to admin dashboard if admin
         else:
-            return redirect(url_for('user_dashboard'))  # Redirect to user dashboard if not admin
+            return redirect(url_for('department_dashboard'))  # Redirect to user dashboard if not admin
     return render_template('base.html')  # If not logged in, show the base template
-#user dashboard
-@app.route('/user/dashboard')
+
+
+# Route to show department summary on the department's dashboard
+@app.route('/department/dashboard')
 @login_required
-def user_dashboard():
-    # Show only questions assigned to the user's department
+def department_dashboard():
     if current_user.department_id:
-        questions = Question.query.filter_by(department_id=current_user.department_id).all()
+        # Get all questions assigned to this user's department
+        department_id = current_user.department_id
+        questions = Question.query.filter_by(department_id=department_id).all()
+
+        # Calculate the total assigned and pending questions
+        total_assigned = len(questions)
+        total_pending = len([q for q in questions if not q.replies])  # Questions without replies
+
+        return render_template(
+            'department_dashboard.html',
+            total_assigned=total_assigned,
+            total_pending=total_pending
+        )
     else:
-        questions = []  # No department assigned
-    return render_template('user_dashboard.html', questions=questions)
+        flash("No department assigned to this user.", "danger")
+        return redirect(url_for('index'))
 
 # login route
 @app.route('/login', methods=['GET', 'POST'])
@@ -113,7 +126,7 @@ def login():
             if user.is_admin:
                 return redirect(url_for('admin_dashboard'))
             else:
-                return redirect(url_for('user_dashboard'))
+                return redirect(url_for('department_dashboard'))
         else:
             flash('Invalid username or password', 'danger')
             return redirect(url_for('login'))
@@ -132,7 +145,7 @@ def logout():
 @login_required
 def admin_dashboard():
     if not current_user.is_admin:
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('department_dashboard'))
 
     # Fetch all departments and questions
     departments = Department.query.all()
@@ -178,6 +191,45 @@ def add_question():
         return redirect(url_for('admin_dashboard'))
     
     return render_template('add_question.html', departments=departments)
+#view_reply_question_user to fetch questions and replies
+@app.route('/view_reply_question_user', methods=['GET', 'POST'])
+@login_required
+def view_reply_question_user():
+    # Fetch questions assigned to the user's department
+    if current_user.department_id:
+        questions = Question.query.filter_by(department_id=current_user.department_id).all()
+    else:
+        questions = []
+    
+    # Check if there are replies for each question
+    for question in questions:
+        question.replies = Reply.query.filter_by(question_id=question.id).all()
+
+    return render_template('view_reply_question_user.html', questions=questions)
+
+#will display the details of a specific qustion and provide an option to reply
+@app.route('/user/question/<int:question_id>', methods=['GET', 'POST'])
+@login_required
+def reply_to_question(question_id):
+    question = Question.query.get_or_404(question_id)
+    replies = Reply.query.filter_by(question_id=question_id).all()
+
+    if request.method == 'POST':
+        reply_text = request.form['reply']
+        file = request.files.get('file')
+        filename = secure_filename(file.filename) if file else None
+
+        if filename:
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+
+        new_reply = Reply(reply=reply_text, file=filename, question_id=question_id, user_id=current_user.id)
+        db.session.add(new_reply)
+        db.session.commit()
+
+        flash("Reply submitted successfully", "success")
+        return redirect(url_for('reply_to_question', question_id=question_id))
+
+    return render_template('reply_to_question.html', question=question, replies=replies)
 
 #view questions department wise 
 @app.route('/questions', methods=['GET'])
@@ -215,7 +267,7 @@ def view_questions_by_department():
 @login_required
 def add_user():
     if not current_user.is_admin:
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('department_dashboard'))
 
     departments = Department.query.all()
 
@@ -237,7 +289,7 @@ def add_user():
 @login_required
 def view_users():
     if not current_user.is_admin:
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('department_dashboard'))
     
     users = User.query.all()  # Fetch all users
     return render_template('view_user.html', users=users)
@@ -247,7 +299,7 @@ def view_users():
 @login_required
 def add_department():
     if not current_user.is_admin:
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('department_dashboard'))
     
     if request.method == 'POST':
         department_name = request.form['department_name']
@@ -272,7 +324,7 @@ def add_department():
 @login_required
 def view_departments():
     if not current_user.is_admin:
-        return redirect(url_for('user_dashboard'))
+        return redirect(url_for('department_dashboard'))
     
     departments = Department.query.all()  # Fetch all departments
     return render_template('view_departments.html', departments=departments)
@@ -296,7 +348,33 @@ def add_reply(question_id):
     db.session.add(new_reply)
     db.session.commit()
     
-    return redirect(url_for('user_dashboard'))
+    return redirect(url_for('department_dashboard'))
+
+#view department summary on department login
+@app.route('/user/department_summary')
+@login_required
+def department_summary():
+    if current_user.department_id:
+        # Fetch all questions assigned to the current user's department
+        questions = Question.query.filter_by(department_id=current_user.department_id).all()
+
+        # Compute the total number of assigned questions
+        total_assigned = len(questions)
+
+        # Compute the total number of pending questions (no replies)
+        total_pending = 0
+        for question in questions:
+            if Reply.query.filter_by(question_id=question.id).count() == 0:
+                total_pending += 1
+    else:
+        total_assigned = 0
+        total_pending = 0
+
+    return render_template(
+        'department_summary.html',  # Name of the template
+        total_assigned=total_assigned,
+        total_pending=total_pending
+    )
 
 #main
 if __name__ == '__main__':

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+    <h1>Department Summary</h1>
+
+    <!-- Table for total assigned and pending questions -->
+    <h2 class="mt-4">Summary of Assigned and Pending Questions</h2>
+    <table class="table table-bordered table-striped text-center">
+        <thead>
+            <tr>
+                <th>Serial Number</th>
+                <th>Total Assigned Questions</th>
+                <th>Total Pending Questions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1</td>
+                <td>{{ total_assigned }}</td>
+                <td>{{ total_pending }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+{% endblock %}

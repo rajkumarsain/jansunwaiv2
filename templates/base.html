@@ -19,50 +19,64 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ml-auto">
-                
+
                 {% if current_user.is_authenticated %}
-    <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
-    </li>
+                    {% if current_user.is_admin %}
+                        <!-- Admin Dashboard Link -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                        </li>
 
-                {% if current_user.is_admin %}
-                    <!-- Questions Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="questionsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Questions
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="questionsDropdown">
-                            <a class="dropdown-item" href="{{ url_for('add_question') }}">Add Question</a>
-                            <a class="dropdown-item" href="{{ url_for('view_questions_by_department') }}">View Questions</a>
-                        </div>
-                    </li>
+                        <!-- Questions Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="questionsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Questions
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="questionsDropdown">
+                                <a class="dropdown-item" href="{{ url_for('add_question') }}">Add Question</a>
+                                <a class="dropdown-item" href="{{ url_for('view_questions_by_department') }}">View Questions</a>
+                            </div>
+                        </li>
 
-                    <!-- Users Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="usersDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Users
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="usersDropdown">
-                            <a class="dropdown-item" href="{{ url_for('add_user') }}">Add User</a>
-                            <a class="dropdown-item" href="{{ url_for('view_users') }}">View Users</a>
-                        </div>
-                    </li>
+                        <!-- Users Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="usersDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Users
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="usersDropdown">
+                                <a class="dropdown-item" href="{{ url_for('add_user') }}">Add User</a>
+                                <a class="dropdown-item" href="{{ url_for('view_users') }}">View Users</a>
+                            </div>
+                        </li>
 
-                    <!-- Departments Dropdown -->
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="departmentsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Departments
-                        </a>
-                        <div class="dropdown-menu" aria-labelledby="departmentsDropdown">
-                            <a class="dropdown-item" href="{{ url_for('add_department') }}">Add Department</a>
-                            <a class="dropdown-item" href="{{ url_for('view_departments') }}">View Departments</a>
-                        </div>
-                    </li>
-                {% endif %}
+                        <!-- Departments Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="departmentsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Departments
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="departmentsDropdown">
+                                <a class="dropdown-item" href="{{ url_for('add_department') }}">Add Department</a>
+                                <a class="dropdown-item" href="{{ url_for('view_departments') }}">View Departments</a>
+                            </div>
+                        </li>
+                    {% else %}
+                        <!-- Department User Dashboard Link -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('department_dashboard') }}">Dashboard</a>
+                        </li>
+
+                        <!-- View and Reply to Questions -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('view_reply_question_user') }}">Questions</a>
+                        </li>
+                    {% endif %}
+
+                    <!-- Logout Link -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
                     </li>
                 {% else %}
+                    <!-- Login Link -->
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('login') }}">Login</a>
                     </li>
@@ -85,8 +99,6 @@
                     </div>
                 {% endif %}
             {% endwith %}
-         
-
         {% endblock %}
     </div>
 
