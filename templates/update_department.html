@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Update Department</h1>
+
+    <!-- Flash messages for errors and success -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="form-group">
+            <label for="department_name">Department Name</label>
+            <input type="text" class="form-control" id="department_name" name="department_name" value="{{ department.name }}" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Update Department</button>
+    </form>
+</div>
+{% endblock %}

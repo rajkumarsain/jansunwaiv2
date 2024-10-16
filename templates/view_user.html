@@ -1,8 +1,21 @@
-<!-- view_user.html -->
 {% extends "base.html" %}
+
 {% block content %}
     <h1>User List</h1>
-    
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <table class="table table-bordered">
         <thead>
             <tr>
@@ -10,6 +23,7 @@
                 <th>Username</th>
                 <th>Department</th>
                 <th>Role</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -19,6 +33,9 @@
                 <td>{{ user.username }}</td>
                 <td>{{ user.department.name if user.department else 'No Department' }}</td>
                 <td>{{ 'Admin' if user.is_admin else 'User' }}</td>
+                <td>
+                    <a href="{{ url_for('update_user', user_id=user.id) }}" class="btn btn-warning">Update</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>

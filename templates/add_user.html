@@ -1,26 +1,41 @@
 {% extends "base.html" %}
 {% block content %}
-<form method="POST">
-    <div class="form-group">
-        <label for="username">Username</label>
-        <input type="text" class="form-control" id="username" name="username" required>
-    </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" name="password" required>
-    </div>
-    <div class="form-group">
-        <label for="department">Department</label>
-        <select class="form-control" id="department" name="department" required>
-            {% for department in departments %}
-                <option value="{{ department.id }}">{{ department.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="is_admin">Is Admin</label>
-        <input type="checkbox" id="is_admin" name="is_admin">
-    </div>
-    <button type="submit" class="btn btn-primary">Add User</button>
-</form>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <div class="form-group">
+            <label for="department">Department</label>
+            <select class="form-control" id="department" name="department" required>
+                {% for department in departments %}
+                    <option value="{{ department.id }}">{{ department.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="is_admin">Is Admin</label>
+            <input type="checkbox" id="is_admin" name="is_admin">
+        </div>
+        <button type="submit" class="btn btn-primary">Add User</button>
+    </form>
+    <!-- Display flashed messages (Bootstrap alert) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show mt-4" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
 {% endblock %}

@@ -166,7 +166,7 @@ def admin_dashboard():
     
     return render_template('admin_dashboard.html', questions=questions, departments_summary=departments_summary)
 
-
+#route for add question
 @app.route('/admin/add_question', methods=['GET', 'POST'])
 @login_required
 def add_question():
@@ -188,9 +188,11 @@ def add_question():
         db.session.add(new_question)
         db.session.commit()
         
-        return redirect(url_for('admin_dashboard'))
+        flash('Question submitted successfully!', 'success')  # Flash success message
+        return redirect(url_for('add_question'))
     
     return render_template('add_question.html', departments=departments)
+
 #view_reply_question_user to fetch questions and replies
 @app.route('/view_reply_question_user', methods=['GET', 'POST'])
 @login_required
@@ -276,13 +278,22 @@ def add_user():
         password = request.form['password']
         department_id = request.form['department']
         is_admin = bool(request.form.get('is_admin', False))  # Admin checkbox
+
+        # Check if the username already exists
+        existing_user = User.query.filter_by(username=username).first()
+        if existing_user:
+            flash('Username already exists!', 'danger')
+            return render_template('add_user.html', departments=departments)  # Render the template without redirect to avoid multiple flashes
+
+        # Add new user if username does not exist
         new_user = User(username=username, password=password, department_id=department_id, is_admin=is_admin)
         db.session.add(new_user)
         db.session.commit()
         flash('User added successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('add_user'))
 
     return render_template('add_user.html', departments=departments)
+
 
 # Route to view the list of users
 @app.route('/admin/view_users', methods=['GET'])
@@ -293,6 +304,42 @@ def view_users():
     
     users = User.query.all()  # Fetch all users
     return render_template('view_user.html', users=users)
+#Route to update user details
+@app.route('/admin/update_user/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def update_user(user_id):
+    if not current_user.is_admin:
+        return redirect(url_for('department_dashboard'))
+
+    user = User.query.get_or_404(user_id)
+
+    if request.method == 'POST':
+        new_username = request.form['username']
+        new_password = request.form['password']
+
+        # Check if the new username already exists (but ignore the current user's username)
+        existing_user = User.query.filter(User.username == new_username, User.id != user.id).first()
+
+        if existing_user:
+            flash('Username already exists!', 'danger')
+            return render_template('update_user.html', user=user)
+
+        # Validate that password is not empty
+        if not new_password:
+            flash('Password cannot be empty!', 'danger')
+            return render_template('update_user.html', user=user)
+
+        # Update user details
+        user.username = new_username
+        user.password = new_password  # Ensure the password is updated
+        
+        db.session.commit()
+
+        flash('User updated successfully!', 'success')
+        return redirect(url_for('view_users'))
+
+    return render_template('update_user.html', user=user)
+
 
 #add department
 @app.route('/admin/add_department', methods=['GET', 'POST'])
@@ -308,16 +355,17 @@ def add_department():
         existing_department = Department.query.filter_by(name=department_name).first()
         if existing_department:
             flash('Department already exists!', 'danger')
-            return redirect(url_for('add_department'))
-
-        # Add new department
-        new_department = Department(name=department_name)
-        db.session.add(new_department)
-        db.session.commit()
-        flash('Department added successfully!', 'success')
-        return redirect(url_for('admin_dashboard'))
+        else:
+            # Add new department
+            new_department = Department(name=department_name)
+            db.session.add(new_department)
+            db.session.commit()
+            flash('Department added successfully!', 'success')
+        
+        return redirect(url_for('add_department'))  # Avoid redirect to other route, stay on form page.
 
     return render_template('add_department.html')
+
 
 #view departments
 @app.route('/admin/departments', methods=['GET'])
@@ -328,6 +376,34 @@ def view_departments():
     
     departments = Department.query.all()  # Fetch all departments
     return render_template('view_departments.html', departments=departments)
+
+#update department details
+@app.route('/admin/update_department/<int:department_id>', methods=['GET', 'POST'])
+@login_required
+def update_department(department_id):
+    if not current_user.is_admin:
+        return redirect(url_for('department_dashboard'))
+    
+    department = Department.query.get_or_404(department_id)
+    
+    if request.method == 'POST':
+        new_name = request.form['department_name']
+        
+        # Check for duplicate department name
+        existing_department = Department.query.filter(Department.name == new_name, Department.id != department.id).first()
+        if existing_department:
+            flash('Department name already exists!', 'danger')
+            return render_template('update_department.html', department=department)
+
+        # Update department name
+        department.name = new_name
+        db.session.commit()
+
+        flash('Department updated successfully!', 'success')
+        return redirect(url_for('view_departments'))
+
+    return render_template('update_department.html', department=department)
+
 
 #To handle replies for each question:
 @app.route('/add_reply/<int:question_id>', methods=['POST'])

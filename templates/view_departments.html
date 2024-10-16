@@ -5,11 +5,26 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="mb-4">Departments</h1>
+
+    <!-- Flash messages for errors and success -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" role="alert">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
     <table class="table table-bordered">
         <thead>
             <tr>
                 <th>ID</th>
                 <th>Department Name</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -17,6 +32,9 @@
             <tr>
                 <td>{{ department.id }}</td>
                 <td>{{ department.name }}</td>
+                <td>
+                    <a href="{{ url_for('update_department', department_id=department.id) }}" class="btn btn-warning">Update</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
