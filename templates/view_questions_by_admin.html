@@ -6,7 +6,7 @@
     {% if current_user.is_admin %}
         <div class="form-group">
             <label for="department">Select Department</label>
-            <form method="GET" action="{{ url_for('view_questions_by_department') }}">
+            <form method="GET" action="{{ url_for('view_questions_by_admin') }}">
                 <select class="form-control" id="department" name="department_id" onchange="this.form.submit()">
                     <option value="all" {% if selected_department_id == "all" %}selected{% endif %}>All Departments</option>
                     {% for department in departments %}
@@ -25,8 +25,9 @@
                 <li class="list-group-item">
                     <h4>{{ question.question }}</h4>
                     <p><strong>Department:</strong> {{ question.department.name }}</p>
+                    <p><strong>Added on:</strong> {{ question.created_at.strftime('%Y-%m-%d') }}</p> <!-- Display created_at timestamp -->
                     {% if question.file %}
-                        <p><strong>Attached File:</strong> <a href="{{ url_for('static', filename='uploads/' + question.file) }}" target="_blank">{{ question.file }}</a></p>
+                        <p><strong>Attached File:</strong> <a href="{{ url_for('uploaded_file', filename=question.file) }}" target="_blank">{{ question.file }}</a></p>
                     {% endif %}
 
                     <!-- Display replies for this question -->

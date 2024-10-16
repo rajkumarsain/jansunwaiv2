@@ -5,7 +5,9 @@ from werkzeug.utils import secure_filename
 from flask_migrate import Migrate
 import os
 import logging
-
+from flask import send_from_directory
+from datetime import datetime
+import time
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
@@ -44,11 +46,12 @@ class Department(db.Model):
 
 # Question model
 class Question(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(10), primary_key=True)  # Custom ID field (MMDDYYXXXX format)
     question = db.Column(db.String(500), nullable=False)
     file = db.Column(db.String(200))  # Optional file attachment
     department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)  # Link to Department
     replies = db.relationship('Reply', backref='question', lazy=True)  # Add relationship to replies
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())  # Add timestamp column
 
 # Reply model
 class Reply(db.Model):
@@ -57,6 +60,22 @@ class Reply(db.Model):
     file = db.Column(db.String(200))  # Optional file attachment
     question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())  # Add timestamp for when the reply was created
+
+#file models to hold attachments in upload folder
+class File(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    file_name = db.Column(db.String(200), nullable=False)  # The name of the file
+    file_path = db.Column(db.String(500), nullable=False)  # The path where the file is stored
+    question_id = db.Column(db.Integer, db.ForeignKey('question.id'), nullable=True)  # Reference to Question
+    reply_id = db.Column(db.Integer, db.ForeignKey('reply.id'), nullable=True)  # Reference to Reply
+    department_id = db.Column(db.Integer, db.ForeignKey('department.id'), nullable=False)  # Reference to Department
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())  # Timestamp
+
+    # Relationships (optional for easier access)
+    question = db.relationship('Question', backref='files')
+    reply = db.relationship('Reply', backref='files')
+    department = db.relationship('Department', backref='files')
 
 def create_default_users():
     # Check if the admin user already exists, and create it if not
@@ -167,6 +186,10 @@ def admin_dashboard():
     return render_template('admin_dashboard.html', questions=questions, departments_summary=departments_summary)
 
 #route for add question
+from datetime import datetime
+from werkzeug.utils import secure_filename
+import os
+
 @app.route('/admin/add_question', methods=['GET', 'POST'])
 @login_required
 def add_question():
@@ -178,36 +201,90 @@ def add_question():
     if request.method == 'POST':
         question_text = request.form['question']
         department_id = request.form['department']  # Get selected department
-        file = request.files.get('file')
-        filename = secure_filename(file.filename) if file else None
-        
-        if filename:
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-        
-        new_question = Question(question=question_text, file=filename, department_id=department_id)
+        files = request.files.getlist('files')  # Get all uploaded files
+
+        # Generate custom ID in MMDDYY format
+        today = datetime.now().strftime('%m%d%y')  # MMDDYY format
+        # Get the number of questions created today to generate the serial number
+        questions_today_count = Question.query.filter(Question.id.like(f"{today}%")).count() + 1
+        custom_id = f"{today}{questions_today_count:04d}"  # MMDDYYXXXX format
+
+        # Create a new question record with the generated custom ID
+        new_question = Question(id=custom_id, question=question_text, department_id=department_id)
         db.session.add(new_question)
         db.session.commit()
+
+        # Process each file, save it, and create File records
+        for file in files:
+            if file and file.filename:  # Check if a file was uploaded
+                # Generate a secure filename
+                filename = secure_filename(f"{new_question.id}_{file.filename}")
+                file_path = os.path.join(app.config['UPLOAD'], filename)
+                file.save(file_path)
+
+                # Create a new File record for each uploaded file
+                new_file = File(file_name=file.filename, file_path=file_path, question_id=new_question.id, department_id=department_id)
+                db.session.add(new_file)
+
+        db.session.commit()  # Commit all changes to the database
         
-        flash('Question submitted successfully!', 'success')  # Flash success message
+        flash('Question and files submitted successfully!', 'success')  # Flash success message
         return redirect(url_for('add_question'))
     
     return render_template('add_question.html', departments=departments)
 
+
+# Serve uploaded files from the 'uploads' folder
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
 #view_reply_question_user to fetch questions and replies
-@app.route('/view_reply_question_user', methods=['GET', 'POST'])
+@app.route('/view_questions_by_user', methods=['GET', 'POST'])
 @login_required
-def view_reply_question_user():
+def view_questions_by_user():
     # Fetch questions assigned to the user's department
     if current_user.department_id:
         questions = Question.query.filter_by(department_id=current_user.department_id).all()
     else:
         questions = []
-    
-    # Check if there are replies for each question
+
+    # Check if there are replies for each question and get files associated with replies
     for question in questions:
         question.replies = Reply.query.filter_by(question_id=question.id).all()
 
-    return render_template('view_reply_question_user.html', questions=questions)
+        # Fetch files related to the question and replies
+        for reply in question.replies:
+            reply.files = File.query.filter_by(reply_id=reply.id).all()
+
+    # Handle form submissions for replies
+    if request.method == 'POST':
+        reply_text = request.form['reply']
+        question_id = request.form['question_id']  # Assuming question ID is passed with the form
+        file = request.files.get('file')
+
+        # Create new reply
+        new_reply = Reply(reply=reply_text, question_id=question_id, user_id=current_user.id)
+        db.session.add(new_reply)
+        db.session.commit()
+
+        # If a file is uploaded, save it and associate it with the reply
+        if file:
+            original_filename = secure_filename(file.filename)
+            # Generate a unique filename using question_id and timestamp
+            unique_filename = f"{question_id}_{int(time.time())}_{original_filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            file.save(file_path)
+
+            # Save the file info in the database
+            new_file = File(file_name=original_filename, file_path=unique_filename,
+                            question_id=question_id, reply_id=new_reply.id, department_id=current_user.department_id)
+            db.session.add(new_file)
+            db.session.commit()
+
+        flash('Reply and file submitted successfully!', 'success')
+
+    return render_template('view_questions_by_user.html', questions=questions)
 
 #will display the details of a specific qustion and provide an option to reply
 @app.route('/user/question/<int:question_id>', methods=['GET', 'POST'])
@@ -233,10 +310,10 @@ def reply_to_question(question_id):
 
     return render_template('reply_to_question.html', question=question, replies=replies)
 
-#view questions department wise 
+#view questions department wise by admin 
 @app.route('/questions', methods=['GET'])
 @login_required
-def view_questions_by_department():
+def view_questions_by_admin():
     # Get the department_id from the current user's session (for department-specific login)
     if not current_user.is_admin and current_user.department_id:
         # If the current user is not an admin, show only their department's questions
@@ -257,7 +334,7 @@ def view_questions_by_department():
             selected_department_id = int(department_id)
 
     return render_template(
-        'view_questions_by_department.html',
+        'view_questions_by_admin.html',
         departments=departments,
         questions=questions,
         selected_department_id=selected_department_id

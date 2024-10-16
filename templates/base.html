@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}My Application{% endblock %}</title>
+    <title>{% block title %}DAILY JANSUNWAI SYSTEM{% endblock %}</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
@@ -13,7 +13,7 @@
 
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="{{ url_for('index') }}">My Application</a>
+        <a class="navbar-brand" href="{{ url_for('index') }}">DAILY JANSUNWAI SYTEM</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -34,7 +34,7 @@
                             </a>
                             <div class="dropdown-menu" aria-labelledby="questionsDropdown">
                                 <a class="dropdown-item" href="{{ url_for('add_question') }}">Add Question</a>
-                                <a class="dropdown-item" href="{{ url_for('view_questions_by_department') }}">View Questions</a>
+                                <a class="dropdown-item" href="{{ url_for('view_questions_by_admin') }}">View Questions</a>
                             </div>
                         </li>
 
@@ -67,7 +67,7 @@
 
                         <!-- View and Reply to Questions -->
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ url_for('view_reply_question_user') }}">Questions</a>
+                            <a class="nav-link" href="{{ url_for('view_questions_by_user') }}">Questions</a>
                         </li>
                     {% endif %}
 

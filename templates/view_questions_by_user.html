@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Questions for Your Department</h1>
+
+    <!-- Check if there are questions -->
+    {% if questions %}
+        <!-- Display department and question details only once at the top -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4><strong>Department:</strong> {{ questions[0].department.name }}</h4>
+                <h5><strong>Total Questions:</strong> {{ questions|length }}</h5>
+            </div>
+        </div>
+
+        <!-- List of Questions -->
+        <ul class="list-group">
+            {% for question in questions %}
+                <li class="list-group-item">
+                    <h4>Question {{ loop.index }}: (ID: {{ question.id }})</h4>
+                    <p><strong>Details:</strong> {{ question.question }}</p>
+
+                    <!-- Show file if attached -->
+                    {% if question.file %}
+                        <p><strong>Attached File:</strong> 
+                            <a href="{{ url_for('uploaded_file', filename=question.file) }}" target="_blank">{{ question.file }}</a>
+                        </p>
+                    {% endif %}
+
+                    <!-- List of Replies in a Table -->
+                    <h5>Replies:</h5>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>S.N.</th>
+                                <th>Reply</th>
+                                <th>Attachments</th>
+                                <th>Date of Reply</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if question.replies %}
+                                {% for reply in question.replies %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td>{{ reply.reply }}</td>
+                                        <td>
+                                            {% if reply.files %}
+                                                {% for file in reply.files %}
+                                                    <a href="{{ url_for('uploaded_file', filename=file.file_path) }}" target="_blank">{{ file.file_name }}</a>
+                                                    <br>
+                                                {% endfor %}
+                                            {% else %}
+                                                No attachments
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ reply.created_at.strftime('%Y-%m-%d') }}</td>
+                                    </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="4">No replies yet.</td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+
+                    <!-- Reply form -->
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="question_id" value="{{ question.id }}">
+                        <div class="form-group">
+                            <label for="reply">Your Reply</label>
+                            <textarea class="form-control" name="reply" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="file">Attach a File (Optional)</label>
+                            <input type="file" class="form-control" name="file">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Submit Reply</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="alert alert-info">No questions available for the selected department.</div>
+    {% endif %}
+
+{% endblock %}

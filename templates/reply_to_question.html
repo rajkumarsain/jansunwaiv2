@@ -21,7 +21,7 @@
                     <p><strong>User {{ reply.user_id }} replied:</strong></p>
                     <p>{{ reply.reply }}</p>
                     {% if reply.file %}
-                        <p><strong>Attached File:</strong> <a href="{{ url_for('static', filename='uploads/' + reply.file) }}" target="_blank">{{ reply.file }}</a></p>
+                    <p><strong>Attached File:</strong> <a href="{{ url_for('uploaded_file', filename=reply.file_path) }}" target="_blank">{{ reply.file_name }}</a></p>
                     {% endif %}
                 </li>
             {% endfor %}

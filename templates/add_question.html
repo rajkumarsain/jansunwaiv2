@@ -14,11 +14,12 @@
         </select>
     </div>
     <div class="form-group">
-        <label for="file">Attach a File (Optional)</label>
-        <input type="file" class="form-control" id="file" name="file">
+        <label for="files">Attach Files (Optional, Multiple allowed)</label>
+        <input type="file" class="form-control" id="files" name="files" multiple>
     </div>
     <button type="submit" class="btn btn-primary">Submit Question</button>
 </form>
+
 <!-- Display flashed messages (Bootstrap alert) -->
 <div class="container mt-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
